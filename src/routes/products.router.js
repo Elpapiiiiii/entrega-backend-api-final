@@ -13,11 +13,13 @@ router.get("/", async (req, res) => {
 
     let filter = {};
 
-    // 🔹 Filtrar por categoría o disponibilidad
+    // 🔥 FILTRO MEJORADO (cumple consigna)
     if (query) {
-      const [key, value] = query.split(":");
-      if (key === "status") filter[key] = value === "true"; // booleano
-      else filter[key] = value;
+      if (query === "true" || query === "false") {
+        filter.stock = query === "true" ? { $gt: 0 } : 0;
+      } else {
+        filter.category = query;
+      }
     }
 
     let options = {
@@ -26,22 +28,20 @@ router.get("/", async (req, res) => {
       lean: true
     };
 
-    // 🔹 Ordenar por precio
     if (sort) {
       options.sort = { price: sort === "asc" ? 1 : -1 };
     }
 
-    // 🔹 Paginate
     const result = await Product.paginate(filter, options);
 
-    // 🔹 Links prev/next completos
-    const baseUrl = "/api/products";
-    const prevLink = result.hasPrevPage
-      ? `${baseUrl}?page=${result.prevPage}&limit=${limit}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
-      : null;
-    const nextLink = result.hasNextPage
-      ? `${baseUrl}?page=${result.nextPage}&limit=${limit}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
-      : null;
+    // 🔥 LINKS PRO
+    const baseUrl = `${req.protocol}://${req.get("host")}/api/products`;
+
+    const createLink = (newPage) => {
+      const params = new URLSearchParams(req.query);
+      params.set("page", newPage);
+      return `${baseUrl}?${params.toString()}`;
+    };
 
     res.json({
       status: "success",
@@ -52,8 +52,8 @@ router.get("/", async (req, res) => {
       page: result.page,
       hasPrevPage: result.hasPrevPage,
       hasNextPage: result.hasNextPage,
-      prevLink,
-      nextLink
+      prevLink: result.hasPrevPage ? createLink(result.prevPage) : null,
+      nextLink: result.hasNextPage ? createLink(result.nextPage) : null
     });
 
   } catch (error) {
