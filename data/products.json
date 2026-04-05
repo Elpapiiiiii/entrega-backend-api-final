@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "title": "Mate Imperial",
+    "description": "Mate premium",
+    "code": "MATE-01",
+    "price": 12000,
+    "status": true,
+    "stock": 5,
+    "category": "mates",
+    "thumbnails": [
+      "img1.jpg"
+    ]
+  }
+]
