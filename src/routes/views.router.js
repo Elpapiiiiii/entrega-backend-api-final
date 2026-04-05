@@ -18,7 +18,7 @@ router.get("/products", async (req, res) => {
   };
 
   res.render("products", {
-    products: result.docs,
+    payload: result.docs,
     page: result.page,
     totalPages: result.totalPages,
     hasPrevPage: result.hasPrevPage,
@@ -38,13 +38,32 @@ router.get("/products/:pid", async (req, res) => {
 
 // CARRITO
 router.get("/carts/:cid", async (req, res) => {
-  const cart = await Cart.findById(req.params.cid)
-    .populate("products.product")
-    .lean();
+  try {
+    const { cid } = req.params;
 
-  if (!cart) return res.status(404).send("Carrito no encontrado");
+    const cart = await Cart.findById(cid)
+      .populate("products.product")
+      .lean(); // 🔥 IMPORTANTE PARA HANDLEBARS
 
-  res.render("cart", { cart });
+    console.log("CART DEBUG:", JSON.stringify(cart, null, 2));
+
+    if (!cart) {
+      return res.status(404).send("Carrito no encontrado");
+    }
+
+    res.render("cart", {
+      cart
+    });
+
+  } catch (error) {
+    console.error("ERROR CARRITO:", error);
+    res.status(500).send("Error cargando carrito");
+  }
+});
+
+// REDIRECT
+router.get("/", (req, res) => {
+  res.redirect("/products");
 });
 
 export default router;
